@@ -1,4 +1,4 @@
-package kh.aprs;
+package kh.aprs.clientexample;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -7,11 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class APRSISClientApplication implements CommandLineRunner{
+public class APRSISClientExampleApplication implements CommandLineRunner{
 
 	@Bean
-	public APRSISClient getAPRSISClient() {
-		return new APRSISClient();
+	public APRSISClientExample getAPRSISClient() {
+		return new APRSISClientExample();
 	}
 	
 	@Value("${aprsIsServername}")
@@ -25,7 +25,7 @@ public class APRSISClientApplication implements CommandLineRunner{
 	
 	
 	public static void main(String[] args) {
-		SpringApplication.run(APRSISClientApplication.class, args);
+		SpringApplication.run(APRSISClientExampleApplication.class, args);
 	}
 
 	@Override
