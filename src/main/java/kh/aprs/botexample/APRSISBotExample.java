@@ -45,7 +45,19 @@ public class APRSISBotExample {
 		}
 	}
 	
+	/**
+	 * Example message: KK6DCT-7>APDR16,TCPIP*,qAC,T2BIO::DCTTEST  :Test 5{5
+	 * 
+	 * @param socketWriter
+	 * @param aprsMessage
+	 * @return
+	 */
 	int parseMessage(PrintWriter socketWriter, String aprsMessage) {
+		//split message on '>' to get sender callsign
+		String[] messageParts = aprsMessage.split(">");
+		String senderCallsign = messageParts[0];
+		System.out.println(senderCallsign);
+		
 		int ackCount = 0;
 		
 		//find last occurrence of '{' that represents an ack request for the message
@@ -53,20 +65,20 @@ public class APRSISBotExample {
 		if(lastIndexOfAckRequest > 0) {
 			String ackNumber = aprsMessage.substring(lastIndexOfAckRequest + 1);
 			System.out.println("Ack number is: " + ackNumber);
-			this.sendAck(socketWriter, ackNumber);
+			this.sendAck(socketWriter, senderCallsign, ackNumber);
 		}
 		
 		//send reply
-		String reply = "DCTTEST>APRS,TCPIP*:KK6DCT-7 :reply at " + new Date();
+		String reply = "DCTTEST>APRS,TCPIP*::" + senderCallsign + ":reply at " + new Date();
 		System.out.println("Sending response: " + reply);
 		socketWriter.println(reply);
 		
 		return ackCount;
 	}
 
-	void sendAck(PrintWriter socketWriter, String ackNumber) {
+	void sendAck(PrintWriter socketWriter, String senderCallsign, String ackNumber) {
 		//TODO extract callsign and pad to 9 chars
-		String ack = "DCTTEST>APRS::KK6DCT-7 :ack" + ackNumber;
+		String ack = "DCTTEST>APRS::" + senderCallsign + ":ack" + ackNumber;
 		System.out.println("Sending ack response: " + ack);
 		socketWriter.println(ack);
 	}
