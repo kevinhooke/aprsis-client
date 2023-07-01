@@ -14,22 +14,12 @@ public class APRSISBotExampleApplication implements CommandLineRunner{
 		return new APRSISBotExample();
 	}
 	
-	@Value("${aprsIsServername}")
-	private String aprsIsServername;
-	
-	@Value("${callsign}")
-	private String callsign;
-	
-	@Value("${aprs-is-password}")
-	private String aprsPassword;
-	
-	
 	public static void main(String[] args) {
 		SpringApplication.run(APRSISBotExampleApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception{
-		this.getAPRSISClient().parseAprsIsPackets(this.aprsIsServername, this.callsign, this.aprsPassword);
+		this.getAPRSISClient().parseAprsIsPackets();
 	}
 }

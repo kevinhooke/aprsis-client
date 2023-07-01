@@ -8,11 +8,30 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * APRS bot that listens for message to the SSID configured in the properties file.
+ * 
+ * @author kevinhooke
+ *
+ */
 @Component
 public class APRSISBotExample {
 
+	@Value("${aprsIsServername}")
+	private String aprsIsServername;
+	
+	@Value("${callsign}")
+	private String callsign;
+	
+	@Value("${aprs-is-password}")
+	private String aprsPassword;
+
+	@Value("${bot-ssid}")
+	private String botSSID;
+	
 	public String buildLogonString(String callsign, String aprsISPassword) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("user ");
@@ -20,16 +39,16 @@ public class APRSISBotExample {
 		sb.append(" pass ");
 		sb.append(aprsISPassword);
 		//sb.append(" vers kk6dct-aprs-client 0.1 filter r/38.55/-121.73/50");
-		sb.append(" vers kk6dct-aprs-client 0.1 filter g/DCTTEST");
+		sb.append(" vers kk6dct-aprs-client 0.1 filter g/").append(this.botSSID);
 		return sb.toString();
 	}
 	
-	public void parseAprsIsPackets(String aprsIsServername, String callsign, String aprsISPassword) throws UnknownHostException, IOException {
-		Socket socket = new Socket(aprsIsServername, 14580);
+	public void parseAprsIsPackets() throws UnknownHostException, IOException {
+		Socket socket = new Socket(this.aprsIsServername, 14580);
 		PrintWriter socketWriter = new PrintWriter(socket.getOutputStream(), true);
 		BufferedReader sockerReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
-		socketWriter.println(this.buildLogonString(callsign, aprsISPassword));
+		socketWriter.println(this.buildLogonString(this.callsign, this.aprsPassword));
 		
 		
 		while (true) {
@@ -69,7 +88,7 @@ public class APRSISBotExample {
 		}
 		
 		//send reply
-		String reply = "DCTTEST>APRS,TCPIP*::" + senderCallsign + ":reply at " + new Date();
+		String reply = this.botSSID + ">APRS,TCPIP*::" + senderCallsign + ":reply at " + new Date();
 		System.out.println("Sending response: " + reply);
 		socketWriter.println(reply);
 		
@@ -78,7 +97,7 @@ public class APRSISBotExample {
 
 	void sendAck(PrintWriter socketWriter, String senderCallsign, String ackNumber) {
 		//TODO extract callsign and pad to 9 chars
-		String ack = "DCTTEST>APRS::" + senderCallsign + ":ack" + ackNumber;
+		String ack = this.botSSID + ">APRS::" + senderCallsign + ":ack" + ackNumber;
 		System.out.println("Sending ack response: " + ack);
 		socketWriter.println(ack);
 	}
