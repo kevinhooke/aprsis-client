@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * APRS bot that listens for message to the SSID configured in the properties file.
+ * APRS bot that listens for messages addressed to the SSID configured in the properties file.
  * 
  * @author kevinhooke
  *
@@ -54,12 +54,9 @@ public class APRSISBotExample {
 		while (true) {
 			String aprsPacket = sockerReader.readLine();
 			System.out.println(aprsPacket);
+			//if not a comment message from the server
 			if(aprsPacket.charAt(0) != '#') {
-				int ackCount = this.parseMessage(socketWriter, aprsPacket);
-				
-				if(ackCount > 0) {
-					//send ack for received message
-				}
+				this.parseMessage(socketWriter, aprsPacket);
 			}
 		}
 	}
@@ -71,7 +68,7 @@ public class APRSISBotExample {
 	 * @param aprsMessage
 	 * @return
 	 */
-	int parseMessage(PrintWriter socketWriter, String aprsMessage) {
+	void parseMessage(PrintWriter socketWriter, String aprsMessage) {
 		//split message on '>' to get sender callsign
 		String[] messageParts = aprsMessage.split(">");
 		String senderCallsign = messageParts[0];
@@ -91,8 +88,6 @@ public class APRSISBotExample {
 		String reply = this.botSSID + ">APRS,TCPIP*::" + senderCallsign + ":reply at " + new Date();
 		System.out.println("Sending response: " + reply);
 		socketWriter.println(reply);
-		
-		return ackCount;
 	}
 
 	void sendAck(PrintWriter socketWriter, String senderCallsign, String ackNumber) {
