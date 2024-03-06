@@ -11,6 +11,13 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.InvokeRequest;
+import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.services.lambda.model.LambdaException;
+
 /**
  * APRS bot that listens for messages addressed to the SSID configured in the properties file.
  * 
@@ -31,6 +38,10 @@ public class APRSISBotExample {
 
 	@Value("${bot-ssid}")
 	private String botSSID;
+
+	@Value("${lambda-name-sunspots}")
+	private String lambdaFunctionName;
+
 	
 	public String buildLogonString(String callsign, String aprsISPassword) {
 		StringBuilder sb = new StringBuilder();
@@ -85,7 +96,10 @@ public class APRSISBotExample {
 		}
 		
 		//send reply
-		String reply = this.botSSID + ">APRS,TCPIP*::" + senderCallsign + ":reply at " + new Date();
+		String sunspotNumber = this.invokeSunspotLambda();
+		
+		String reply = this.botSSID + ">APRS,TCPIP*::" + senderCallsign + ":Current sunspot count = " + sunspotNumber;
+		
 		System.out.println("Sending response: " + reply);
 		socketWriter.println(reply);
 	}
@@ -97,5 +111,50 @@ public class APRSISBotExample {
 		socketWriter.println(ack);
 	}
 	
+	/**
+	 * Note: Lambda Handler classes are from:
+	 * <pre>
+	 * <groupId>com.amazonaws</groupId>
+     * <artifactId>aws-java-sdk-lambda</artifactId>
+	 * </pre>
+	 * 
+	 * InvokeRquest apis are from:
+	 * <pre>
+	 * <groupId>software.amazon.awssdk</groupId>
+	 * <artifactId>lambda</artifactId>
+	 * </pre>
+	 * @return
+	 */
+	private String invokeSunspotLambda() {
+		InvokeResponse res = null;
+		String result = null;
+		
+        try {
+
+        	Region region = Region.EU_WEST_2;
+        	LambdaClient lambdaClient = LambdaClient.builder()
+        	        .region(region)
+        	        .build();
+        	
+        	//Need a SdkBytes instance for the payload
+            String json = "{}";
+            SdkBytes payload = SdkBytes.fromUtf8String(json) ;
+
+            //Setup an InvokeRequest
+            InvokeRequest request = InvokeRequest.builder()
+                    .functionName(lambdaFunctionName)
+                    .payload(payload)
+                    .build();
+
+            res = lambdaClient.invoke(request);
+            result = res.payload().asUtf8String() ;
+            System.out.println(result);
+
+        } catch(LambdaException e) {
+            System.err.println(e.getMessage());
+        }
+        
+        return result;
+	}
 }
 
